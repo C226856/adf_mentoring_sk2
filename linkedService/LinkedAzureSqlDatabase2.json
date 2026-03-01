@@ -1,0 +1,23 @@
+{
+	"name": "LinkedAzureSqlDatabase2",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "azure-mentoring-sk.database.windows.net",
+			"database": "movies",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "adf",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LinkedAzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "sql-movies-adf"
+			}
+		}
+	}
+}
