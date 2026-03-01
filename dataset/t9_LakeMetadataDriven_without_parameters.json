@@ -1,0 +1,26 @@
+{
+	"name": "t9_LakeMetadataDriven_without_parameters",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedAzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "ratings_part*.csv",
+				"folderPath": "metadata-driven",
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": "|",
+			"encodingName": "UTF-8",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

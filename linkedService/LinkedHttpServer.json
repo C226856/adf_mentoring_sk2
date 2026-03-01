@@ -1,0 +1,13 @@
+{
+	"name": "LinkedHttpServer",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://http-secret-sk.vault.azure.net/",
+			"authenticationType": "Anonymous",
+			"baseUrl": "https://http-secret-sk.vault.azure.net/"
+		}
+	}
+}

@@ -1,0 +1,28 @@
+{
+	"name": "AzureSqlMICustomer",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlMI",
+		"typeProperties": {
+			"server": "EPPLKRAW05AA\\MSSQLSERVER2025",
+			"database": "CinemaTickets",
+			"encrypt": "optional",
+			"trustServerCertificate": true,
+			"authenticationType": "SQL",
+			"userName": "sa",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LinkedAzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "azure-sql-sa"
+			}
+		},
+		"connectVia": {
+			"referenceName": "SelfHostedintegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

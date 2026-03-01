@@ -1,0 +1,165 @@
+{
+	"name": "IncrementalCopy_fromBlobToLake",
+	"properties": {
+		"activities": [
+			{
+				"name": "CopyIncrementalFiles",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "LookupOnlineWatermark",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": false,
+							"modifiedDatetimeStart": {
+								"value": "@activity('LookupOnlineWatermark').output.firstRow.OldWatermarkvalue",
+								"type": "Expression"
+							},
+							"modifiedDatetimeEnd": {
+								"value": "@activity('LookupOnlineWatermark').output.firstRow.NewWatermarkvalue",
+								"type": "Expression"
+							},
+							"wildcardFileName": "*"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".json"
+						}
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": false,
+					"validateDataConsistency": false,
+					"logSettings": {
+						"enableCopyActivityLog": true,
+						"copyActivityLogSettings": {
+							"logLevel": "Warning",
+							"enableReliableLogging": false
+						},
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "LinkedAzureDataLakeStorage",
+								"type": "LinkedServiceReference"
+							},
+							"path": "log"
+						}
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "BlobOnline",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "LakeOnline",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "LookupOnlineWatermark",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select \n\tWatermarkValue as OldWatermarkvalue,\n\tSWITCHOFFSET(\n    TODATETIMEOFFSET(GETDATE(), DATENAME(TzOffset, SYSDATETIMEOFFSET())),\n    '+00:00') as NewWatermarkvalue\nfrom watermarktable \nwhere TableName = 'online'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"isolationLevel": "ReadCommitted",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SqlCinemaTicketsDataset",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "UpdateTicketWatermark",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "CopyIncrementalFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "LinkedSqlCinemaTickets",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "update dbo.watermarktable\nset WatermarkValue = replace(replace('@{activity('LookupOnlineWatermark').output.firstRow.NewWatermarkvalue}', 'T', ' '), '+00:00', '')\nwhere TableName = 'online'",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-01-07T12:36:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

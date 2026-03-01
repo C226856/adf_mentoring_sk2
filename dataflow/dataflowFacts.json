@@ -1,0 +1,151 @@
+{
+	"name": "dataflowFacts",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AzureMoviesSqlDataset",
+						"type": "DatasetReference"
+					},
+					"name": "sourceMovies"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDimOnline"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDimMovie",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDimMovies"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureMoviesSqlDataset",
+						"type": "DatasetReference"
+					},
+					"name": "sourceFactMonthlySnapshot"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlFactPurchase",
+						"type": "DatasetReference"
+					},
+					"name": "sinkFactOnline"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSqlFactMonthlySnapshot",
+						"type": "DatasetReference"
+					},
+					"name": "sinkFactMonthlySnapshot"
+				}
+			],
+			"transformations": [
+				{
+					"name": "joinPurchase"
+				},
+				{
+					"name": "joinMovies"
+				},
+				{
+					"name": "joinMonthlySnapshot"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          DateKey as string,",
+				"          Price as decimal(4,1),",
+				"          TransactionId as string,",
+				"          ServiceCode as string,",
+				"          MovieIdNK as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select distinct\\r\\n     FORMAT(t_op.TransactionDate, \\'yyyyMMdd\\') as DateKey,\\r\\n     t_op.Price, t_op.TransactionId,\\r\\n     t_os.ServiceCode, tm.MovieIdNK\\r\\nfrom movies.dbo.tOnlinePurchase t_op\\r\\n     join movies.dbo.tOnlineService t_os\\r\\n          on t_op.ServiceId = t_os.ServiceId\\r\\n     join movies.dbo.tMovies tm\\r\\n          on t_op.MovieId = tm.MovieId',",
+				"     format: 'query') ~> sourceMovies",
+				"source(output(",
+				"          ServiceCode as string,",
+				"          ServiceKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select distinct\\n     ServiceCode, ServiceKey as OnlineServiceKey\\nfrom dbo.DimOnlineService',",
+				"     format: 'query') ~> sourceDimOnline",
+				"source(output(",
+				"          MovieIdNK as integer,",
+				"          MovieKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select distinct\\r\\n     MovieIdNK, MovieKey\\r\\nfrom dbo.DimMovie',",
+				"     format: 'query',",
+				"     partitionBy('hash', 2,",
+				"          MovieKey",
+				"     )) ~> sourceDimMovies",
+				"source(output(",
+				"          MonthKey as string,",
+				"          ServiceCode as string,",
+				"          PurchaseAmount as decimal(38,1),",
+				"          PurchaseQuantity as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select \\n     FORMAT(t_op.TransactionDate, \\'yyyyMMdd\\') as MonthKey,\\n     tos.ServiceCode,\\n     sum(Price)  as PurchaseAmount,\\n     count(t_op.TransactionId) as PurchaseQuantity\\nfrom dbo.tOnlinePurchase t_op\\n     join dbo.tOnlineService tos\\n          on t_op.ServiceId = tos.ServiceId\\ngroup by \\n     FORMAT(t_op.TransactionDate, \\'yyyyMMdd\\'),\\n     tos.ServiceCode',",
+				"     format: 'query') ~> sourceFactMonthlySnapshot",
+				"sourceMovies, sourceDimOnline join(sourceMovies@ServiceCode == sourceDimOnline@ServiceCode,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinPurchase",
+				"joinPurchase, sourceDimMovies join(sourceMovies@MovieIdNK == sourceDimMovies@MovieIdNK,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     partitionBy('hash', 2,",
+				"          MovieKey",
+				"     ),",
+				"     broadcast: 'auto')~> joinMovies",
+				"sourceFactMonthlySnapshot, sourceDimOnline join(sourceFactMonthlySnapshot@ServiceCode == sourceDimOnline@ServiceCode,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinMonthlySnapshot",
+				"joinMovies sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkFactOnline",
+				"joinMonthlySnapshot sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkFactMonthlySnapshot"
+			]
+		}
+	}
+}

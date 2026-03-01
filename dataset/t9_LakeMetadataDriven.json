@@ -1,0 +1,74 @@
+{
+	"name": "t9_LakeMetadataDriven",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedAzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"pSourceContainer": {
+				"type": "string"
+			},
+			"pSourceFolder": {
+				"type": "string"
+			},
+			"pSourceFileName": {
+				"type": "string"
+			},
+			"pColumnDelimiter": {
+				"type": "string"
+			},
+			"pRowDelimiter": {
+				"type": "string"
+			},
+			"pEscapeChar": {
+				"type": "string"
+			},
+			"pQuoteChar": {
+				"type": "string"
+			},
+			"pCopyActivityMapping": {
+				"type": "array"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().pSourceFileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().pSourceFolder",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().pSourceContainer",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": {
+				"value": "@dataset().pColumnDelimiter",
+				"type": "Expression"
+			},
+			"rowDelimiter": {
+				"value": "@if(equals(dataset().pRowDelimiter, '\\n'), '\n', dataset().pRowDelimiter)",
+				"type": "Expression"
+			},
+			"encodingName": "UTF-8",
+			"escapeChar": {
+				"value": "@dataset().pEscapeChar",
+				"type": "Expression"
+			},
+			"firstRowAsHeader": true,
+			"quoteChar": {
+				"value": "@dataset().pQuoteChar",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

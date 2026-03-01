@@ -1,0 +1,21 @@
+{
+	"name": "mentoring-adf-sk",
+	"properties": {
+		"globalParameters": {
+			"uriSecret": {
+				"type": "string",
+				"value": "https://mentoring-key-vault-sk0.vault.azure.net/secrets/http-secret-sk/0645f4d0a2fe47a5957182bd3eb19b10?api-version=7.3"
+			},
+			"gitToken": {
+				"type": "string",
+				"value": "https://mentoring-key-vault-sk0.vault.azure.net/secrets/git-personal-token/932cbbd14bb343d381b46da7daa92b52"
+			}
+		}
+	},
+	"location": "francecentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "83b04734-0077-4fc7-a314-83abb7a332d7",
+		"tenantId": "b41b72d0-4e9f-4c26-8a69-f949f367c91d"
+	}
+}

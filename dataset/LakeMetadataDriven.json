@@ -1,0 +1,79 @@
+{
+	"name": "LakeMetadataDriven",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedAzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SourceContainer": {
+				"type": "string"
+			},
+			"SourceFolder": {
+				"type": "string"
+			},
+			"SourceFileName": {
+				"type": "string"
+			},
+			"ColumnDelimiter": {
+				"type": "string"
+			},
+			"RowDelimiter": {
+				"type": "string"
+			},
+			"EscapeChar": {
+				"type": "string"
+			},
+			"QuoteChar": {
+				"type": "string"
+			},
+			"FirstRowAsHeader": {
+				"type": "string"
+			},
+			"Mapping": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().SourceFileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().SourceFolder",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().SourceContainer",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": {
+				"value": "@dataset().ColumnDelimiter",
+				"type": "Expression"
+			},
+			"rowDelimiter": {
+				"value": "@dataset().RowDelimiter",
+				"type": "Expression"
+			},
+			"escapeChar": {
+				"value": "@dataset().EscapeChar",
+				"type": "Expression"
+			},
+			"firstRowAsHeader": {
+				"value": "@bool(dataset().FirstRowAsHeader)",
+				"type": "Expression"
+			},
+			"quoteChar": {
+				"value": "@dataset().QuoteChar",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

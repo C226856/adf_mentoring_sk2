@@ -1,0 +1,24 @@
+{
+	"name": "t9_triggerMetadataDriven",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "metadataDrivenCopy_Script",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 3,
+				"startTime": "2026-01-26T16:44:00",
+				"timeZone": "Central European Standard Time"
+			}
+		}
+	}
+}

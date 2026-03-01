@@ -1,0 +1,30 @@
+{
+	"name": "LakeDelimitedText_ratings",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedAzureDataLakeStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"newFileName": {
+				"type": "String",
+				"defaultValue": "\"parameters\": {     \"fileName\": {         \"type\": \"string\"     } }"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "ratings",
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,72 @@
+{
+	"name": "t9_AzureSqlControlMetadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedAzureSqlDatabaseSA",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SourceContainer",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SourceFolder",
+				"type": "varchar"
+			},
+			{
+				"name": "SourceFileName",
+				"type": "varchar"
+			},
+			{
+				"name": "ColumnDelimiter",
+				"type": "varchar"
+			},
+			{
+				"name": "RowDelimiter",
+				"type": "varchar"
+			},
+			{
+				"name": "EscapeChar",
+				"type": "varchar"
+			},
+			{
+				"name": "QuoteChar",
+				"type": "varchar"
+			},
+			{
+				"name": "FirstRowAsHeader",
+				"type": "bit"
+			},
+			{
+				"name": "SinkDBSchema",
+				"type": "varchar"
+			},
+			{
+				"name": "SinkDBTableName",
+				"type": "varchar"
+			},
+			{
+				"name": "CopyActivityMapping",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DIU",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "etl",
+			"table": "tControlMetadata"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

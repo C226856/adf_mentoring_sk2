@@ -1,0 +1,24 @@
+{
+	"name": "LinkedAzureSqlDatabaseSA",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "azure-mentoring-sk.database.windows.net",
+			"database": "movies",
+			"encrypt": "optional",
+			"trustServerCertificate": true,
+			"authenticationType": "SQL",
+			"userName": "azure-mentoring-sk",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LinkedAzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "azure-sql-sa"
+			}
+		}
+	}
+}

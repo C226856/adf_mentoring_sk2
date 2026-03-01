@@ -1,0 +1,319 @@
+{
+	"name": "metadataDrivenCopy_ratings",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupControlMetadata",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select * from etl.tControlMetadata where Id = 4",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "t9_AzureSqlControlMetadata",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachControlItem",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupControlMetadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupControlMetadata').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "CopyMetaDrivenRating",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "pipelineId",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "source_filename",
+											"value": "$$FILENAME"
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"wildcardFolderPath": {
+											"value": "@item().SourceFolder",
+											"type": "Expression"
+										},
+										"wildcardFileName": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										},
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": true,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"enableSkipIncompatibleRow": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Warning",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "LinkedAzureDataLakeStorage",
+											"type": "LinkedServiceReference"
+										},
+										"path": "log"
+									}
+								},
+								"translator": {
+									"value": "@json(item().CopyActivityMapping)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "t9_LakeMetadataDriven",
+									"type": "DatasetReference",
+									"parameters": {
+										"pSourceContainer": {
+											"value": "@item().SourceContainer",
+											"type": "Expression"
+										},
+										"pSourceFolder": {
+											"value": "@item().SourceFolder",
+											"type": "Expression"
+										},
+										"pSourceFileName": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										},
+										"pColumnDelimiter": {
+											"value": "@item().ColumnDelimiter",
+											"type": "Expression"
+										},
+										"pRowDelimiter": {
+											"value": "@item().RowDelimiter",
+											"type": "Expression"
+										},
+										"pEscapeChar": {
+											"value": "@item().EscapeChar",
+											"type": "Expression"
+										},
+										"pQuoteChar": {
+											"value": "@item().QuoteChar",
+											"type": "Expression"
+										},
+										"pCopyActivityMapping": {
+											"value": "@item().CopyActivityMapping",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "t9_AzureSqlDrivenMetadata",
+									"type": "DatasetReference",
+									"parameters": {
+										"pSinkDBSchema": {
+											"value": "@item().SinkDBSchema",
+											"type": "Expression"
+										},
+										"pSinkDBTableName": {
+											"value": "@item().SinkDBTableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "TriggerLogicApps",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "WebGet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set variable Success",
+						"dependencyConditions": [
+							"Succeeded",
+							"Skipped"
+						]
+					},
+					{
+						"activity": "Set variable Failure",
+						"dependencyConditions": [
+							"Skipped",
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": {
+						"value": "@activity('WebGet').output.value",
+						"type": "Expression"
+					},
+					"body": {
+						"value": "{\n\t\"emailBody\":\"Data Factory: @{pipeline().DataFactory} <br/> \n\tPipeline Run ID: @{pipeline().RunId} <br/> <br/> This notification was created automatically.\",\n\t\"emailSubject\":\"Execution of pipeline @{pipeline().Pipeline}  @{variables('pipelineStatus')} \",\n\t\"receiver\":\"@{pipeline().parameters.receiver}\"\n}",
+						"type": "Expression"
+					},
+					"linkedServiceName": {
+						"referenceName": "LinkedHttpServer",
+						"type": "LinkedServiceReference"
+					}
+				}
+			},
+			{
+				"name": "WebGet",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": {
+						"value": "@pipeline().globalParameters.uriSecret",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
+				}
+			},
+			{
+				"name": "Set variable Success",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEachControlItem",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineStatus",
+					"value": "Successfully completed"
+				}
+			},
+			{
+				"name": "Set variable Failure",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEachControlItem",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineStatus",
+					"value": "Failed"
+				}
+			}
+		],
+		"parameters": {
+			"pDIU": {
+				"type": "int",
+				"defaultValue": 4
+			},
+			"receiver": {
+				"type": "string",
+				"defaultValue": "Sviatlana_Kastsenka@epam.com"
+			}
+		},
+		"variables": {
+			"pipelineStatus": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "t9_MetadataDrivenCopyActivity"
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-03-01T08:07:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

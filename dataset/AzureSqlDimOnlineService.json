@@ -1,0 +1,17 @@
+{
+	"name": "AzureSqlDimOnlineService",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDataMart",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DimOnlineService"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,81 @@
+{
+	"name": "starPopulationDataMart",
+	"properties": {
+		"activities": [
+			{
+				"name": "DataFlowDim",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "dataflowDim",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sourceMovies": {
+								"SinkTableName": "dbo.DimMovie"
+							},
+							"sourceOnline": {
+								"SinkTableName": "dbo.DimOnlineService"
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "Azure-IR-M8",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "DataFlowFacts",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DataFlowDim",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "dataflowFacts",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sourceMovies": {
+								"SinkTableName": "dbo.FactOnlinePurchase"
+							},
+							"sourceFactMonthlySnapshot": {
+								"SinkTableName": "dbo.FactOnlinePurchase_MonthlySnapshot"
+							}
+						}
+					},
+					"integrationRuntime": {
+						"referenceName": "Azure-IR-M8",
+						"type": "IntegrationRuntimeReference"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-01-10T20:22:44Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

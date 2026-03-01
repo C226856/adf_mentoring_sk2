@@ -1,0 +1,17 @@
+{
+	"name": "AzureSqlMICustomer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlMICustomer",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlMITable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "cdc",
+			"table": "dbo_customers_CT"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

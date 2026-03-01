@@ -1,0 +1,19 @@
+{
+	"name": "GitHub1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "GitHub",
+		"typeProperties": {
+			"username": "https://github.com/C226856",
+			"credential": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LinkedAzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "git-personal-token"
+			}
+		}
+	}
+}

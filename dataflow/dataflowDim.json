@@ -1,0 +1,88 @@
+{
+	"name": "dataflowDim",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AzureMoviesSqlDataset",
+						"type": "DatasetReference"
+					},
+					"name": "sourceMovies"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureOnlineSqlDataset",
+						"type": "DatasetReference"
+					},
+					"name": "sourceOnline"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDimMovie",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimMovie"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSqlDimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimOnlineService"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedDateDimMovie"
+				},
+				{
+					"name": "derivedDateDimOnlineService"
+				}
+			],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select \\n     tm.MovieIdNK as MovieIdNK, tm.Title, tm.ReleaseDate, tm.Runtime, tms.MovieStatusName as MovieStatus\\nfrom dbo.tMovies tm\\n     join dbo.tMovieStatus tms\\n     on tm.MovieStatusId = tms.MovieStatusId',",
+				"     format: 'query') ~> sourceMovies",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'select distinct\\n     ServiceCode, ServiceName\\nfrom dbo.tOnlineService ',",
+				"     format: 'query') ~> sourceOnline",
+				"sourceMovies derive(CreatedDate = currentUTC(),",
+				"          ModifiedDate = currentUTC()) ~> derivedDateDimMovie",
+				"sourceOnline derive(CreatedDate = currentUTC(),",
+				"          ModifiedDate = currentUTC()) ~> derivedDateDimOnlineService",
+				"derivedDateDimMovie sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimMovie",
+				"derivedDateDimOnlineService sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkDimOnlineService"
+			]
+		}
+	}
+}

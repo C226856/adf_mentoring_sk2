@@ -1,0 +1,17 @@
+{
+	"name": "AzureSqlFactMonthlySnapshot",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDataMart",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "FactOnlinePurchase_MonthlySnapshot"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

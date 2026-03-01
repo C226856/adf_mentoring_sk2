@@ -1,0 +1,31 @@
+{
+	"name": "t9_AzureSqlDrivenMetadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedAzureSqlDatabaseSA",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"pSinkDBSchema": {
+				"type": "string"
+			},
+			"pSinkDBTableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().pSinkDBSchema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().pSinkDBTableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

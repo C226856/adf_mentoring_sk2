@@ -1,0 +1,89 @@
+{
+	"name": "metadataDrivenTruncate",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupControlMetadata",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select \r\n    SinkDBSchema, SinkDBTableName\r\nfrom etl.tControlMetadata",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "t9_AzureSqlControlMetadata",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachControlItem",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupControlMetadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupControlMetadata').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "ScriptMetaDriven",
+							"type": "Script",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "LinkedAzureSqlDatabaseSA",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "DECLARE @sql NVARCHAR(MAX);\nSET @sql = N'TRUNCATE TABLE ' + QUOTENAME('@{item().SinkDBSchema}') + '.' + QUOTENAME('@{item().SinkDBTableName}');\nEXEC sp_executesql @sql;\n",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "t9_MetadataDrivenCopyActivity"
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-01-24T22:23:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
